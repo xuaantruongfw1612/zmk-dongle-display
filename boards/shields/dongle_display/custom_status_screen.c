@@ -58,7 +58,6 @@ lv_obj_t *zmk_display_status_screen() {
     lv_style_set_text_line_space(&global_style, 1);
     lv_obj_add_style(screen, &global_style, LV_PART_MAIN);
     
-    // ← BẬT LẠI Output Status (icon USB/BT)
     zmk_widget_output_status_init(&output_status_widget, screen);
     lv_obj_align(zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
 
@@ -67,29 +66,31 @@ lv_obj_t *zmk_display_status_screen() {
     lv_obj_align_to(zmk_widget_wpm_status_obj(&wpm_status_widget), zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_OUT_RIGHT_MID, 7, 0);
 #endif
 
+#if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_MODIFIERS)
+    zmk_widget_modifiers_init(&modifiers_widget, screen);
+    // ← SỬA: MODIFIERS nằm dưới Output Status, cách 3px
+    lv_obj_align_to(zmk_widget_modifiers_obj(&modifiers_widget), zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_OUT_BOTTOM_LEFT, 0, 3);
+    //                                                                                                                                              ↑ cách 3px
+#if IS_ENABLED(CONFIG_ZMK_HID_INDICATORS)
+    zmk_widget_hid_indicators_init(&hid_indicators_widget, screen);
+    lv_obj_align_to(zmk_widget_hid_indicators_obj(&hid_indicators_widget), zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_OUT_TOP_LEFT, 0, -2);
+#endif
+#endif
+
 #if IS_ENABLED(CONFIG_ZMK_BATTERY)
     zmk_widget_dongle_battery_status_init(&dongle_battery_status_widget, screen);
-    // ← SỬA: Pin dịch phải 10px
+    // ← SỬA: Pin dịch phải 20px (10+10), lên trên 10px
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_WPM)
-    lv_obj_align_to(zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), zmk_widget_wpm_status_obj(&wpm_status_widget), LV_ALIGN_OUT_BOTTOM_LEFT, 10, 2);
-    //                                                                                                                                                              ↑ +10 = dịch phải
+    lv_obj_align_to(zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), zmk_widget_wpm_status_obj(&wpm_status_widget), LV_ALIGN_OUT_RIGHT_MID, 10, -10);
+    //                                                                                                                                                              ↑ phải 20px  ↑ lên 10px
 #else
-    lv_obj_align_to(zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_OUT_BOTTOM_LEFT, 10, 2);
+    lv_obj_align_to(zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_OUT_RIGHT_MID, 10, -10);
 #endif
 #endif
 
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_BONGO_CAT)
     zmk_widget_bongo_cat_init(&bongo_cat_widget, screen);
     lv_obj_align(zmk_widget_bongo_cat_obj(&bongo_cat_widget), LV_ALIGN_BOTTOM_RIGHT, 0, -7);
-#endif
-
-#if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_MODIFIERS)
-    zmk_widget_modifiers_init(&modifiers_widget, screen);
-    lv_obj_align(zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_BOTTOM_LEFT, 0, 0);
-#if IS_ENABLED(CONFIG_ZMK_HID_INDICATORS)
-    zmk_widget_hid_indicators_init(&hid_indicators_widget, screen);
-    lv_obj_align_to(zmk_widget_hid_indicators_obj(&hid_indicators_widget), zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_OUT_TOP_LEFT, 0, -2);
-#endif
 #endif
 
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_LAYER)
