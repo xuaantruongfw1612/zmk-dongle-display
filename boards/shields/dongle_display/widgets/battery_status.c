@@ -21,17 +21,16 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include "battery_status.h"
 
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_DONGLE_BATTERY)
-#define SOURCE_OFFSET 1
+    #define SOURCE_OFFSET 1
 #else
-#define SOURCE_OFFSET 0
+    #define SOURCE_OFFSET 0
 #endif
 
 #ifndef ZMK_SPLIT_BLE_PERIPHERAL_COUNT
-#define ZMK_SPLIT_BLE_PERIPHERAL_COUNT 0
+#  define ZMK_SPLIT_BLE_PERIPHERAL_COUNT 0
 #endif
 
-#define BUFFER_SIZE \
-    LV_CANVAS_BUF_SIZE(5, 8, LV_COLOR_FORMAT_GET_BPP(LV_COLOR_FORMAT_L8), LV_DRAW_BUF_STRIDE_ALIGN)
+#define BUFFER_SIZE LV_CANVAS_BUF_SIZE(5, 8, LV_COLOR_FORMAT_GET_BPP(LV_COLOR_FORMAT_L8), LV_DRAW_BUF_STRIDE_ALIGN)
 
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
@@ -44,17 +43,13 @@ struct battery_state {
 struct battery_object {
     lv_obj_t *symbol;
     lv_obj_t *label;
-};
-
-static struct battery_object
-    battery_objects[ZMK_SPLIT_BLE_PERIPHERAL_COUNT + SOURCE_OFFSET];
-
-static lv_color_t
-    battery_image_buffer[ZMK_SPLIT_BLE_PERIPHERAL_COUNT + SOURCE_OFFSET][BUFFER_SIZE];
+} battery_objects[ZMK_SPLIT_BLE_PERIPHERAL_COUNT + SOURCE_OFFSET];
+    
+static lv_color_t battery_image_buffer[ZMK_SPLIT_BLE_PERIPHERAL_COUNT + SOURCE_OFFSET][BUFFER_SIZE];
 
 static void draw_battery(lv_obj_t *canvas, uint8_t level, bool usb_present) {
     lv_canvas_fill_bg(canvas, lv_color_black(), LV_OPA_COVER);
-
+    
     lv_layer_t layer;
     lv_canvas_init_layer(canvas, &layer);
 
@@ -73,7 +68,7 @@ static void draw_battery(lv_obj_t *canvas, uint8_t level, bool usb_present) {
 
     lv_area_t rect_coords;
     bool rect_draw = true;
-
+    
     if (level <= 10 || usb_present) {
         rect_coords = (lv_area_t){1, 2, 3, 6};
     } else if (level <= 30) {
@@ -99,20 +94,18 @@ static void set_battery_symbol(lv_obj_t *widget, struct battery_state state) {
     if (state.source >= ZMK_SPLIT_BLE_PERIPHERAL_COUNT + SOURCE_OFFSET) {
         return;
     }
-
-    LOG_DBG("source: %d, level: %d, usb: %d",
-            state.source, state.level, state.usb_present);
-
+    LOG_DBG("source: %d, level: %d, usb: %d", state.source, state.level, state.usb_present);
     lv_obj_t *symbol = battery_objects[state.source].symbol;
     lv_obj_t *label = battery_objects[state.source].label;
 
     draw_battery(symbol, state.level, state.usb_present);
+    // ← SỬA: Bỏ khoảng trắng sau %
     lv_label_set_text_fmt(label, "%u%%", state.level);
-
+    
     if (state.level > 0 || state.usb_present) {
         lv_obj_clear_flag(symbol, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(label, LV_OBJ_FLAG_HIDDEN);
         lv_obj_move_foreground(symbol);
+        lv_obj_clear_flag(label, LV_OBJ_FLAG_HIDDEN);
         lv_obj_move_foreground(label);
     } else {
         lv_obj_add_flag(symbol, LV_OBJ_FLAG_HIDDEN);
@@ -122,15 +115,11 @@ static void set_battery_symbol(lv_obj_t *widget, struct battery_state state) {
 
 void battery_status_update_cb(struct battery_state state) {
     struct zmk_widget_dongle_battery_status *widget;
-    SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
-        set_battery_symbol(widget->obj, state);
-    }
+    SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) { set_battery_symbol(widget->obj, state); }
 }
 
 static struct battery_state peripheral_battery_status_get_state(const zmk_event_t *eh) {
-    const struct zmk_peripheral_battery_state_changed *ev =
-        as_zmk_peripheral_battery_state_changed(eh);
-
+    const struct zmk_peripheral_battery_state_changed *ev = as_zmk_peripheral_battery_state_changed(eh);
     return (struct battery_state){
         .source = ev->source + SOURCE_OFFSET,
         .level = ev->state_of_charge,
@@ -138,21 +127,17 @@ static struct battery_state peripheral_battery_status_get_state(const zmk_event_
 }
 
 static struct battery_state central_battery_status_get_state(const zmk_event_t *eh) {
-    const struct zmk_battery_state_changed *ev =
-        as_zmk_battery_state_changed(eh);
-
-    return (struct battery_state){
+    const struct zmk_battery_state_changed *ev = as_zmk_battery_state_changed(eh);
+    return (struct battery_state) {
         .source = 0,
-        .level = (ev != NULL)
-                     ? ev->state_of_charge
-                     : zmk_battery_state_of_charge(),
+        .level = (ev != NULL) ? ev->state_of_charge : zmk_battery_state_of_charge(),
 #if IS_ENABLED(CONFIG_USB_DEVICE_STACK)
         .usb_present = zmk_usb_is_powered(),
-#endif
+#endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
     };
 }
 
-static struct battery_state battery_status_get_state(const zmk_event_t *eh) {
+static struct battery_state battery_status_get_state(const zmk_event_t *eh) { 
     if (as_zmk_peripheral_battery_state_changed(eh) != NULL) {
         return peripheral_battery_status_get_state(eh);
     } else {
@@ -160,72 +145,44 @@ static struct battery_state battery_status_get_state(const zmk_event_t *eh) {
     }
 }
 
-ZMK_DISPLAY_WIDGET_LISTENER(widget_dongle_battery_status,
-                            struct battery_state,
-                            battery_status_update_cb,
-                            battery_status_get_state)
+ZMK_DISPLAY_WIDGET_LISTENER(widget_dongle_battery_status, struct battery_state,
+                            battery_status_update_cb, battery_status_get_state)
 
-ZMK_SUBSCRIPTION(widget_dongle_battery_status,
-                 zmk_peripheral_battery_state_changed);
+ZMK_SUBSCRIPTION(widget_dongle_battery_status, zmk_peripheral_battery_state_changed);
 
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_DONGLE_BATTERY)
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
-ZMK_SUBSCRIPTION(widget_dongle_battery_status,
-                 zmk_battery_state_changed);
 
+ZMK_SUBSCRIPTION(widget_dongle_battery_status, zmk_battery_state_changed);
 #if IS_ENABLED(CONFIG_USB_DEVICE_STACK)
-ZMK_SUBSCRIPTION(widget_dongle_battery_status,
-                 zmk_usb_conn_state_changed);
-#endif
-#endif
-#endif
+ZMK_SUBSCRIPTION(widget_dongle_battery_status, zmk_usb_conn_state_changed);
+#endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
+#endif /* !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL) */
+#endif /* IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_DONGLE_BATTERY) */
 
-int zmk_widget_dongle_battery_status_init(
-    struct zmk_widget_dongle_battery_status *widget,
-    lv_obj_t *parent) {
-
+int zmk_widget_dongle_battery_status_init(struct zmk_widget_dongle_battery_status *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
+
     lv_obj_set_size(widget->obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 
     int x_offset = 0;
-
+    
     for (int i = 0; i < ZMK_SPLIT_BLE_PERIPHERAL_COUNT + SOURCE_OFFSET; i++) {
         lv_obj_t *image_canvas = lv_canvas_create(widget->obj);
         lv_obj_t *battery_label = lv_label_create(widget->obj);
 
-        lv_canvas_set_buffer(
-            image_canvas,
-            battery_image_buffer[i],
-            5,
-            8,
-            LV_COLOR_FORMAT_L8);
+        lv_canvas_set_buffer(image_canvas, battery_image_buffer[i], 5, 8, LV_COLOR_FORMAT_L8);
 
-        /* icon */
-        lv_obj_align(image_canvas, LV_ALIGN_TOP_LEFT, x_offset, 0);
-
-        /* label: FIX khoảng cách số */
-        // ← THÊM dòng này để bỏ letter spacing (quan trọng nhất!)
-        lv_obj_set_style_text_letter_space(battery_label, 0, LV_PART_MAIN);
+        // ← SỬA: Icon trước, label sau (sát icon)
+        lv_obj_align(image_canvas, LV_ALIGN_TOP_LEFT, x_offset, 0);  // Icon pin
+        lv_obj_align_to(battery_label, image_canvas, LV_ALIGN_OUT_RIGHT_MID, 1, 0);  // Số % bên phải, cách 1px
         
-        lv_obj_set_width(battery_label, 18);                 // đủ cho "100%"
-        lv_label_set_long_mode(battery_label, LV_LABEL_LONG_CLIP);
-        lv_obj_set_style_text_align(
-            battery_label,
-            LV_TEXT_ALIGN_CENTER,
-            0);
-
-        lv_obj_align_to(
-            battery_label,
-            image_canvas,
-            LV_ALIGN_OUT_RIGHT_MID,
-            0,
-            0);
-
-        x_offset += 23; // icon 5 + label 18
+        // ← SỬA: Giảm khoảng cách giữa các pin (icon 5px + label ~18px + spacing 5px = 28px)
+        x_offset += 28;
 
         lv_obj_add_flag(image_canvas, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(battery_label, LV_OBJ_FLAG_HIDDEN);
-
+        
         battery_objects[i] = (struct battery_object){
             .symbol = image_canvas,
             .label = battery_label,
@@ -233,13 +190,13 @@ int zmk_widget_dongle_battery_status_init(
     }
 
     sys_slist_append(&widgets, &widget->node);
+
     widget_dongle_battery_status_init();
 
     return 0;
 }
 
-lv_obj_t *zmk_widget_dongle_battery_status_obj(
-    struct zmk_widget_dongle_battery_status *widget) {
+lv_obj_t *zmk_widget_dongle_battery_status_obj(struct zmk_widget_dongle_battery_status *widget) {
     return widget->obj;
 }
 
