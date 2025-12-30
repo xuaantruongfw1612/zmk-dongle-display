@@ -9,14 +9,14 @@
 #include "widgets/modifiers.h"
 #include "widgets/bongo_cat.h"
 #include "widgets/layer_status.h"
-#include "widgets/output_status.h"
+// #include "widgets/output_status.h"  // ← COMMENT
 #include "widgets/hid_indicators.h"
 #include "widgets/wpm_status.h"
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
-static struct zmk_widget_output_status output_status_widget;
+// static struct zmk_widget_output_status output_status_widget;  // ← COMMENT
 
 #if IS_ENABLED(CONFIG_ZMK_BATTERY)
 static struct zmk_widget_dongle_battery_status dongle_battery_status_widget;
@@ -58,12 +58,23 @@ lv_obj_t *zmk_display_status_screen() {
     lv_style_set_text_line_space(&global_style, 1);
     lv_obj_add_style(screen, &global_style, LV_PART_MAIN);
     
-    zmk_widget_output_status_init(&output_status_widget, screen);
-    lv_obj_align(zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
+    // ← COMMENT (bỏ Output Status)
+    // zmk_widget_output_status_init(&output_status_widget, screen);
+    // lv_obj_align(zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
 
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_WPM)
     zmk_widget_wpm_status_init(&wpm_status_widget, screen);
-    lv_obj_align_to(zmk_widget_wpm_status_obj(&wpm_status_widget), zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_OUT_RIGHT_MID, 7, 0);
+    lv_obj_align(zmk_widget_wpm_status_obj(&wpm_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
+#endif
+
+#if IS_ENABLED(CONFIG_ZMK_BATTERY)
+    zmk_widget_dongle_battery_status_init(&dongle_battery_status_widget, screen);
+    // ← SỬA: Pin nằm dưới WPM
+#if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_WPM)
+    lv_obj_align_to(zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), zmk_widget_wpm_status_obj(&wpm_status_widget), LV_ALIGN_OUT_BOTTOM_LEFT, 0, 2);
+#else
+    lv_obj_align(zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
+#endif
 #endif
 
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_BONGO_CAT)
@@ -87,11 +98,6 @@ lv_obj_t *zmk_display_status_screen() {
 #else
     lv_obj_align(zmk_widget_layer_status_obj(&layer_status_widget), LV_ALIGN_BOTTOM_RIGHT, 0, -3);
 #endif
-#endif
-
-#if IS_ENABLED(CONFIG_ZMK_BATTERY)
-    zmk_widget_dongle_battery_status_init(&dongle_battery_status_widget, screen);
-    lv_obj_align(zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), LV_ALIGN_TOP_RIGHT, 0, 0);
 #endif
 
     return screen;
