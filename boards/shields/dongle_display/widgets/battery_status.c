@@ -162,23 +162,24 @@ ZMK_SUBSCRIPTION(widget_dongle_battery_status, zmk_usb_conn_state_changed);
 int zmk_widget_dongle_battery_status_init(struct zmk_widget_dongle_battery_status *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
 
-    // ← SỬA: Xếp ngang thay vì dọc
-    lv_obj_set_flex_flow(widget->obj, LV_FLEX_FLOW_ROW);  // ROW = ngang
-    lv_obj_set_style_pad_column(widget->obj, 3, LV_PART_MAIN);  // Khoảng cách 3px giữa các pin
-    lv_obj_set_style_pad_all(widget->obj, 0, LV_PART_MAIN);  // Không padding
-    
     lv_obj_set_size(widget->obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 
+    // ← SỬA: Xếp ngang bằng cách tính toán offset thủ công (LVGL v7)
+    int x_offset = 0;  // Bắt đầu từ x=0
+    
     for (int i = 0; i < ZMK_SPLIT_BLE_PERIPHERAL_COUNT + SOURCE_OFFSET; i++) {
         lv_obj_t *image_canvas = lv_canvas_create(widget->obj);
         lv_obj_t *battery_label = lv_label_create(widget->obj);
 
         lv_canvas_set_buffer(image_canvas, battery_image_buffer[i], 5, 8, LV_COLOR_FORMAT_L8);
 
-        // ← SỬA: Alignment cho layout ngang
-        // Thay vì align theo TOP_RIGHT với offset dọc (i * 10)
-        // Giờ widgets tự động xếp ngang nhờ FLEX_FLOW_ROW
-        lv_obj_align_to(battery_label, image_canvas, LV_ALIGN_OUT_LEFT_MID, 0, 0);
+        // ← SỬA: Xếp ngang thay vì dọc
+        // Label trước, icon sau
+        lv_obj_align(battery_label, LV_ALIGN_TOP_LEFT, x_offset, 0);
+        lv_obj_align_to(image_canvas, battery_label, LV_ALIGN_OUT_RIGHT_MID, 1, 0);
+        
+        // Tính offset cho pin tiếp theo (label width ~30px + icon 5px + spacing 3px)
+        x_offset += 38;
 
         lv_obj_add_flag(image_canvas, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(battery_label, LV_OBJ_FLAG_HIDDEN);
