@@ -62,31 +62,31 @@ lv_obj_t *zmk_display_status_screen() {
     // zmk_widget_output_status_init(&output_status_widget, screen);
     // lv_obj_align(zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
 
+#if IS_ENABLED(CONFIG_ZMK_BATTERY)
+    // ← SỬA: Pin lên TOP_LEFT (dòng đầu tiên)
+    zmk_widget_dongle_battery_status_init(&dongle_battery_status_widget, screen);
+    lv_obj_align(zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
+#endif
+
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_MODIFIERS)
-    // MODIFIERS ở top-left
+    // ← SỬA: MODIFIERS nằm DƯỚI Pin
     zmk_widget_modifiers_init(&modifiers_widget, screen);
+#if IS_ENABLED(CONFIG_ZMK_BATTERY)
+    lv_obj_align_to(zmk_widget_modifiers_obj(&modifiers_widget), zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), LV_ALIGN_OUT_BOTTOM_LEFT, 0, 2);
+#else
     lv_obj_align(zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_TOP_LEFT, 0, 0);
+#endif
 #if IS_ENABLED(CONFIG_ZMK_HID_INDICATORS)
     zmk_widget_hid_indicators_init(&hid_indicators_widget, screen);
     lv_obj_align_to(zmk_widget_hid_indicators_obj(&hid_indicators_widget), zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_OUT_TOP_LEFT, 0, -2);
 #endif
 #endif
 
-#if IS_ENABLED(CONFIG_ZMK_BATTERY)
-    zmk_widget_dongle_battery_status_init(&dongle_battery_status_widget, screen);
-    // ← SỬA: Pin nằm DƯỚI MODIFIERS (nằm ngang)
-#if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_MODIFIERS)
-    lv_obj_align_to(zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_OUT_BOTTOM_LEFT, 0, 2);
-#else
-    lv_obj_align(zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
-#endif
-#endif
-
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_WPM)
     zmk_widget_wpm_status_init(&wpm_status_widget, screen);
-    // WPM bên phải MODIFIERS
-#if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_MODIFIERS)
-    lv_obj_align_to(zmk_widget_wpm_status_obj(&wpm_status_widget), zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_OUT_RIGHT_MID, 7, 0);
+    // ← SỬA: WPM căn theo Pin (dòng trên)
+#if IS_ENABLED(CONFIG_ZMK_BATTERY)
+    lv_obj_align_to(zmk_widget_wpm_status_obj(&wpm_status_widget), zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), LV_ALIGN_OUT_RIGHT_MID, 7, 0);
 #else
     lv_obj_align(zmk_widget_wpm_status_obj(&wpm_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
 #endif

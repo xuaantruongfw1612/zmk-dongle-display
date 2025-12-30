@@ -99,7 +99,8 @@ static void set_battery_symbol(lv_obj_t *widget, struct battery_state state) {
     lv_obj_t *label = battery_objects[state.source].label;
 
     draw_battery(symbol, state.level, state.usb_present);
-    lv_label_set_text_fmt(label, "%4u%% ", state.level);
+    // ← SỬA: Bỏ khoảng trắng sau %
+    lv_label_set_text_fmt(label, "%u%%", state.level);
     
     if (state.level > 0 || state.usb_present) {
         lv_obj_clear_flag(symbol, LV_OBJ_FLAG_HIDDEN);
@@ -164,8 +165,7 @@ int zmk_widget_dongle_battery_status_init(struct zmk_widget_dongle_battery_statu
 
     lv_obj_set_size(widget->obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 
-    // ← SỬA: Xếp ngang bằng cách tính toán offset thủ công (LVGL v7)
-    int x_offset = 0;  // Bắt đầu từ x=0
+    int x_offset = 0;
     
     for (int i = 0; i < ZMK_SPLIT_BLE_PERIPHERAL_COUNT + SOURCE_OFFSET; i++) {
         lv_obj_t *image_canvas = lv_canvas_create(widget->obj);
@@ -173,13 +173,12 @@ int zmk_widget_dongle_battery_status_init(struct zmk_widget_dongle_battery_statu
 
         lv_canvas_set_buffer(image_canvas, battery_image_buffer[i], 5, 8, LV_COLOR_FORMAT_L8);
 
-        // ← SỬA: Xếp ngang thay vì dọc
-        // Label trước, icon sau
-        lv_obj_align(battery_label, LV_ALIGN_TOP_LEFT, x_offset, 0);
-        lv_obj_align_to(image_canvas, battery_label, LV_ALIGN_OUT_RIGHT_MID, 1, 0);
+        // ← SỬA: Icon trước, label sau (sát icon)
+        lv_obj_align(image_canvas, LV_ALIGN_TOP_LEFT, x_offset, 0);  // Icon pin
+        lv_obj_align_to(battery_label, image_canvas, LV_ALIGN_OUT_RIGHT_MID, 1, 0);  // Số % bên phải, cách 1px
         
-        // Tính offset cho pin tiếp theo (label width ~30px + icon 5px + spacing 3px)
-        x_offset += 38;
+        // ← SỬA: Giảm khoảng cách giữa các pin (icon 5px + label ~18px + spacing 5px = 28px)
+        x_offset += 28;
 
         lv_obj_add_flag(image_canvas, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(battery_label, LV_OBJ_FLAG_HIDDEN);
