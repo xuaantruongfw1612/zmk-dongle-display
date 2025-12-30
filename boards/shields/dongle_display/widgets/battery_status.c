@@ -204,6 +204,9 @@ int zmk_widget_dongle_battery_status_init(
         lv_obj_align(image_canvas, LV_ALIGN_TOP_LEFT, x_offset, 0);
 
         /* label: FIX khoảng cách số */
+        // ← THÊM dòng này để bỏ letter spacing (quan trọng nhất!)
+        lv_obj_set_style_text_letter_space(battery_label, 0, LV_PART_MAIN);
+        
         lv_obj_set_width(battery_label, 18);                 // đủ cho "100%"
         lv_label_set_long_mode(battery_label, LV_LABEL_LONG_CLIP);
         lv_obj_set_style_text_align(
