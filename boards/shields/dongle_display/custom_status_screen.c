@@ -63,7 +63,7 @@ lv_obj_t *zmk_display_status_screen() {
     // lv_obj_align(zmk_widget_output_status_obj(&output_status_widget), LV_ALIGN_TOP_LEFT, 0, 0);
 
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_MODIFIERS)
-    // ← SỬA: MODIFIERS lên top-left thay thế Output Status
+    // MODIFIERS ở top-left (thay thế Output Status)
     zmk_widget_modifiers_init(&modifiers_widget, screen);
     lv_obj_align(zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_TOP_LEFT, 0, 0);
 #if IS_ENABLED(CONFIG_ZMK_HID_INDICATORS)
@@ -74,7 +74,7 @@ lv_obj_t *zmk_display_status_screen() {
 
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_WPM)
     zmk_widget_wpm_status_init(&wpm_status_widget, screen);
-    // ← SỬA: WPM căn theo MODIFIERS
+    // WPM bên phải MODIFIERS
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_MODIFIERS)
     lv_obj_align_to(zmk_widget_wpm_status_obj(&wpm_status_widget), zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_OUT_RIGHT_MID, 7, 0);
 #else
@@ -84,7 +84,7 @@ lv_obj_t *zmk_display_status_screen() {
 
 #if IS_ENABLED(CONFIG_ZMK_BATTERY)
     zmk_widget_dongle_battery_status_init(&dongle_battery_status_widget, screen);
-    // ← SỬA: Pin căn theo WPM hoặc MODIFIERS
+    // Pin bên phải WPM (nằm ngang nhờ battery_status.c đã sửa)
 #if IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_WPM)
     lv_obj_align_to(zmk_widget_dongle_battery_status_obj(&dongle_battery_status_widget), zmk_widget_wpm_status_obj(&wpm_status_widget), LV_ALIGN_OUT_RIGHT_MID, 10, 0);
 #elif IS_ENABLED(CONFIG_ZMK_DONGLE_DISPLAY_MODIFIERS)
@@ -110,3 +110,4 @@ lv_obj_t *zmk_display_status_screen() {
 
     return screen;
 }
+
